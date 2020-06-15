@@ -1,5 +1,3 @@
-#Preston Young 43798917
-
 import Stocks_IEX_API as IEX_API
 import Stocks_indicators as INDICATOR
 import Stocks_signal_strategies as STRATEGY
