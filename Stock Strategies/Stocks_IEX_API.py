@@ -1,5 +1,3 @@
-#Preston Young 43798917
-
 import json
 import urllib.request
 
