@@ -1,5 +1,3 @@
-#Preston Young 43798917
-
 class ColumnsState:
     def __init__(self, rows, cols, init_board_state):
         self.rows = rows
