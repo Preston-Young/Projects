@@ -1,4 +1,3 @@
-#Preston Young 43798917
 import pygame
 import project5_game_logic as Logic
 
