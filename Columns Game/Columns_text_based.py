@@ -1,5 +1,3 @@
-#Preston Young 43798917
-
 import Columns_game_logic as Logic
 
 class ColumnsGame:
