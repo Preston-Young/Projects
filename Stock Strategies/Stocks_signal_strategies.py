@@ -1,5 +1,3 @@
-#Preston Young 43798917
-
 class TR:
     def __init__(self, indicators, strategy):
         self.indicators = indicators
