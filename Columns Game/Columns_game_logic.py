@@ -1,5 +1,3 @@
-#Preston Young 43798917
-
 import random
 
 class ColumnsState:
@@ -13,7 +11,7 @@ class ColumnsState:
         self.is_matched = False
         self.faller_exists = False
         self.is_game_over = False
-        self.color_list = ['R','T','G','L']
+        self.color_list = ['R', 'C', 'Y', 'G', 'T', 'F', 'L']
         
 
     def create_board(self):
@@ -31,6 +29,7 @@ class ColumnsState:
                     self.board[row_index].append('   ')
 
         return self.board
+
 
     def drop(self):
         '''
@@ -58,6 +57,9 @@ class ColumnsState:
         Changes the contents of the board when
         the user decides to move the jewel to the left.
         '''
+
+        # This allows the user to move left even when they're at the left-most edge of
+        # the board without any consequences
         if self.board[self.y_coor+2][self.x_coor-1] != '   ' or self.x_coor <= 1:
             pass
         
@@ -83,6 +85,9 @@ class ColumnsState:
         Changes the contents of the board when
         the user decides to move the jewel to the right.
         '''
+
+        # This allows the user to move right even when they're at the right-most edge of
+        # the board without any consequences
         if self.board[self.y_coor+2][self.x_coor+1] != '   ' or self.x_coor >= self.cols:
             pass
    
@@ -106,22 +111,32 @@ class ColumnsState:
 
     def create_faller(self):
         '''
-        Creates the faller according to the user's
-        specified colors. If the faller has already been
-        created and is in use, or the column is full,
-        this method simply returns the board. If the faller is
-        created on top of a jewel, it changes the board
-        because it landed.
+        Creates a faller in a random column with 3 random colors.
+        If the column is full, this method simply returns the board.
+        If the faller is created on top of a jewel,
+        it changes the board because it's now considered as landed.
         '''
-        self.x_coor = random.randint(1,6)
+
+        self.x_coor = random.randint(1,self.cols)
+
+        # Keep trying to create a faller until it's created in a column that isn't full
+        while self.is_col_full():
+            self.x_coor = random.randint(1,6)
+
         self.y_coor = 0
         self.faller = []
         self.faller_exists = True
-        self.is_col_full()
         
         if self.faller_exists:
             for i in range(3):
-                self.faller.append(random.choice(self.color_list))
+                next_color = random.choice(self.color_list)
+
+                # This ensures that it's not possible to have a faller of all 3 the same color, as that would
+                # result in an automatic match
+                while len(self.faller) == 2 and (next_color == self.faller[0] and next_color == self.faller[1]):
+                    next_color = random.choice(self.color_list)
+
+                self.faller.append(next_color)
 
         else:
             return self.board 
@@ -141,8 +156,7 @@ class ColumnsState:
     def is_col_full(self):
         '''
         Checks to see if the column that
-        the user is trying to drop a faller in
-        is full or not.
+        the faller is dropped in is full or not.
         '''
         temp_list = []
         for row_index in range(2, self.rows+2):
@@ -190,9 +204,9 @@ class ColumnsState:
     def landing(self):
         '''
         Changes the contents of the board when
-        if the jewel is landing. If the user hits
-        enter again, the jewel is now frozen and
-        the frozen method is called.
+        the jewel is landing. If the user waits, the jewel is
+        now frozen and the frozen method is called to check for
+        a match and change the state of the board.
         '''
         if '|' in self.board[self.y_coor][self.x_coor]:
             for i in range(3):
