@@ -23,4 +23,5 @@ This is a C++ Based text editor that supports the following commands/interations
   * Redo (Ctrl + Y)
   * Quit (Ctrl + Q)
 
-Note: The tarball file that I included in the text editor folder contains the same three folders: app, exp, and gtest.
+Note: The tarball file that I included in the text editor folder contains the same 
+three folders I included here: app, exp, and gtest.
