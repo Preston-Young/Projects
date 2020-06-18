@@ -11,7 +11,7 @@ class ColumnsState:
         self.is_matched = False
         self.faller_exists = False
         self.is_game_over = False
-        self.color_list = ['R', 'C', 'Y', 'G', 'T', 'F', 'L']
+        self.color_list = ['R', 'Y', 'G', 'F' , 'L']
         
 
     def create_board(self):
@@ -130,11 +130,6 @@ class ColumnsState:
         if self.faller_exists:
             for i in range(3):
                 next_color = random.choice(self.color_list)
-
-                # This ensures that it's not possible to have a faller of all 3 the same color, as that would
-                # result in an automatic match
-                while len(self.faller) == 2 and (next_color == self.faller[0] and next_color == self.faller[1]):
-                    next_color = random.choice(self.color_list)
 
                 self.faller.append(next_color)
 
@@ -403,7 +398,3 @@ class ColumnsState:
             for col in self.board[i]:
                 if col != '   ' and col != '|':
                     self.is_game_over = True
-
-            
-
-    
