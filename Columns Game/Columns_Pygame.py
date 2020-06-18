@@ -5,7 +5,7 @@ class ColumnsGame:
     def __init__(self):
         self.running = True
         self.num_rows = 13
-        self.num_cols = 10
+        self.num_cols = 8
         self.width = 500
         self.height = 500
         self.game = Logic.ColumnsState(self.num_rows, self.num_cols)
@@ -21,16 +21,14 @@ class ColumnsGame:
 
     def run(self) -> None:
         '''
-        Runs the user interface part of the game
-        by asking for several inputs: the number of
-        rows and columns, whether to begin the field
-        empty, and what action the user wants to take.
-        Each time, the board updated and the print method is called.
+        Runs the game
         '''
 
         pygame.init()
 
         self.surface = pygame.display.set_mode((self.width, self.height))
+
+        pygame.display.set_caption("Columns")
         
         self.game_board = self.game.create_board()
 
@@ -51,7 +49,7 @@ class ColumnsGame:
                 if event.type == pygame.QUIT:
                     self.end_game()
 
-                elif event.type == pygame.KEYDOWN:
+                elif event.type == pygame.KEYDOWN and not self.game.is_matched:
                     self.handle_event()
 
                 elif event.type == pygame.VIDEORESIZE:
@@ -65,8 +63,8 @@ class ColumnsGame:
 
                     else:
                         self.game_board = self.game.freeze()
-                        self.print_board()          
-            
+                        self.print_board()
+
         pygame.quit()
 
 
@@ -89,7 +87,7 @@ class ColumnsGame:
             self.game_board = self.game.drop()
             self.print_board()
 
-        elif action[pygame.K_DOWN] and not self.game.faller_exists:
+        elif action[pygame.K_DOWN] and not self.game.has_landed():
             self.game_board = self.game.freeze()
             self.print_board()
 
@@ -120,26 +118,29 @@ class ColumnsGame:
 
         x_counter = 0
         y_counter = 0
+        height = self.height // self.num_rows
+        width = self.width // (self.num_cols + 14)
         
-        for row_index in range(2,self.num_rows+2):
-            height = self.height // self.num_rows
+        for row_index in range(2, self.num_rows + 2):
             y_coor = height * y_counter
             y_counter += 1
             x_counter = 0
             
             for col_index in range(1,self.num_cols+1):
-                width = self.width // (self.num_cols+14)
                 x_coor = width * (x_counter+7)
                 x_counter += 1
                 element = self.game_board[row_index][col_index]
-            
+
+                # Normal grid square (hollow white square with thickness of 1 pixel)
                 if element == '   ':
                     pygame.draw.rect(self.surface, (255, 255, 255), (x_coor , y_coor, width, height), 1)
 
+                # Matching animation
                 elif '*' in element:
                     color = self.colors[element[1]]
                     pygame.draw.rect(self.surface, color, (x_coor , y_coor, width, height), 5)
 
+                # Landing animation
                 elif '|' in element:
                     color = self.colors[element[1]]
                     pygame.draw.rect(self.surface, color, (x_coor , y_coor, 5, height))
@@ -149,10 +150,8 @@ class ColumnsGame:
                     color = self.colors[element[1]]
                     pygame.draw.rect(self.surface, color, (x_coor , y_coor, width, height))
 
-        pygame.display.flip()
+        pygame.display.update()
 
 
 if __name__ == '__main__':
-    ColumnsGame().run()            
-
-    
+    ColumnsGame().run()
