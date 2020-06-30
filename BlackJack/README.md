@@ -9,3 +9,5 @@ by adding parameter and return types to all my methods and utilizing private con
 
 In the near future, I plan to launch an online version using a remote server.
 I plan to use Python's socket library to handle the a client/server communication for the project.
+
+![Alt text](C:/Users/yauma/BlackJack.jpg?raw=true "Title")
