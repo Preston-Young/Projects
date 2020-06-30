@@ -3,7 +3,7 @@ By doing extensive research, I made sure to stay faithful to everything about th
 I took information from many different websites to create a version of BlackJack with the most standard rules.
 The website of rules I referred the most to can be found here: https://bicyclecards.com/how-to-play/blackjack/
 
-I enjoyed this project a lot because it was the first time I really made clean, commented code that was well-separated into their respective classes.
+I enjoyed this project a lot because it helped me practice making clean, commented code that was well-separated into their respective classes and accounted for user error.
 Although I coded this in Python, I borrowed my knowledge and techniques from C++ and Java
 by adding parameter and return types to all my methods and utilizing private const variables.
 
