@@ -21,6 +21,72 @@ class Game:
         self.roundOver = True
         self.winnings = []
 
+    # Private helper function that keeps prompting the player for a wager until they provide a valid input
+    # The wager input must be: an int, within the min/max bet range, no more than the amount of money they have left
+    def _determineWager(self, player: Player) -> int:
+        player_money = player.getMoney()
+        wager_is_int = False
+
+        # Accounting for user error of inputting anything other than an int for the wager.
+        while not wager_is_int:
+            try:
+                # Covering the edge case of a player have less money left than the minimum bet.
+                if player_money < self.MINBET:
+                    print()
+                    print(f'Since you currently have less money than the minimum bet (${self.MINBET}), you\'ll have to bet all your money!')
+                    breakpoint = input('')
+                    wager = player_money
+
+                # Makes sure player bets within the range of the preset min and max bet.
+                # Also, the player must have enough money left to make the bet.
+                else:
+                    wager = int(input(f'Please make a wager from ${self.MINBET} to ${self.MAXBET}: '))
+                    while (wager < self.MINBET) or (wager > self.MAXBET) or (wager > player_money):
+                        if wager < self.MINBET:
+                            print(f'Sorry, you must bet at least ${self.MINBET}.')
+                        elif wager > self.MAXBET:
+                            print(f'Sorry, you can\'t bet more than ${self.MAXBET}.')
+                        elif wager > player_money:
+                            print('You don\'t have enough money to make that bet!')
+                        print()
+                        wager = int(input(f'Please make a wager from ${self.MINBET} to ${self.MAXBET}: '))
+                wager_is_int = True
+
+            except ValueError:
+                print('Must give an int for your wager.')
+                print()
+
+        return wager
+
+    # Private helper function that keeps prompting the player for an insurance wager until they provide a valid input
+    # The insurance wager input must be: an int, at least $1 and no more than half their original wager, and it
+    # cannot be more than the amount of money the player has left (after their wage is deducted)
+    def _determineInsuranceWager(self, player: Player) -> int:
+        insurance_wager_is_int = False
+        print(f'Total money left (after your wager of ${player.getWager()}): ${player.getMoney()-player.getWager()}')
+        breakpoint = input('')
+
+        # Accounting for user error of inputting anything other than an int for the wager.
+        while not insurance_wager_is_int:
+            try:
+                insurance_wager = int(input(f'Please make an insurance wager from $1 to ${player.getWager() // 2} '))
+                while (insurance_wager < 1) or (insurance_wager > player.getWager() // 2) or (player.getMoney() - player.getWager() - insurance_wager < 0):
+                    if insurance_wager < 1:
+                        print('Sorry, you can\'t wager anything less than $1.')
+                    elif insurance_wager > player.getWager() // 2:
+                        print(f'Sorry, you can\'t wager anything more than ${player.getWager() // 2}.')
+                    else:
+                        print('You don\'t have enough money to make that bet!')
+                    print()
+                    insurance_wager = int(input(f'Please make an insurance wager from $1 to ${player.getWager() // 2} '))
+                insurance_wager_is_int = True
+
+            except ValueError:
+                print('Insurance wager must be an int.')
+                print()
+
+        return insurance_wager
+
     # Add a player to the game, but only after the round is over
     def addPlayer(self, player: Player) -> None:
         if self.roundOver:
@@ -118,45 +184,13 @@ class Game:
         print(f'The current number of cards left in the deck is {self.CARDS.deckSize()}')
         print(f'The deck will be reshuffled after {self.CARDS.deckSize() - self.WHENTOSHUFFLE} more cards are drawn')
 
-        # For each player, ask them to make a wager
+        # For each player, print their name and toal money, and then ask them to make a wager
         for player in self.players:
-            player_money = player.getMoney()
-            wager_is_int = False
-
             print()
             print(f'Player: {player.getName()}')
-            print(f'Total Money: ${player_money}')
+            print(f'Total Money: ${player.getMoney()}')
 
-            # Accounting for user error of inputting anything other than an int for the wager.
-            while not wager_is_int:
-                try:
-                    # Covering the edge case of a player have less money left than the minimum bet.
-                    if player_money < self.MINBET:
-                        print()
-                        print(f'Since you currently have less money than the minimum bet (${self.MINBET}), you\'ll have to bet all your money!')
-                        breakpoint = input('')
-                        wager = player_money
-
-                    # Makes sure player bets within the range of the preset min and max bet.
-                    # Also, the player must have enough money left to make the bet.
-                    else:
-                        wager = int( input(f'Please make a wager from ${self.MINBET} to ${self.MAXBET}: ') )
-                        while (wager < self.MINBET) or (wager > self.MAXBET) or (wager > player_money):
-                            if wager < self.MINBET:
-                                print(f'Sorry, you must bet at least ${self.MINBET}.')
-                            elif wager > self.MAXBET:
-                                print(f'Sorry, you can\'t bet more than ${self.MAXBET}.')
-                            elif wager > player_money:
-                                print('You don\'t have enough money to make that bet!')
-                            print()
-                            wager = int(input(f'Please make a wager from ${self.MINBET} to ${self.MAXBET}: '))
-                    wager_is_int = True
-
-                except ValueError:
-                    print('Must give an int for your wager.')
-                    print()
-
-            player.setWager(wager)
+            player.setWager(self._determineWager(player))
 
         print()
         print('~~~~~~~~~~Let the round begin. Good luck!~~~~~~~~~~')
@@ -198,7 +232,8 @@ class Game:
             print(f'{player.getName()}\'s hand: {player.getHand()} === {self.SCORING.totalScore(player.getHand())} points')
             breakpoint = input('')
 
-        self.DEALER.addCard(self.CARDS.getCard())
+        # self.CARDS.getCard()
+        self.DEALER.addCard('A of spades')
         dealer_hand = self.DEALER.getHand()
         print(f'Dealer\'s hand: {dealer_hand} === {self.SCORING.totalScore(dealer_hand)} points')
         breakpoint = input('')
@@ -206,33 +241,18 @@ class Game:
         # All players have the option of making an insurance bet only if the dealer's first card is an Ace.
         if dealer_hand[0][0] == 'A':
             for player in self.players:
-                insurance = input(f'{player.getName()}, care to make an insurance bet? (Y/N) ')
-                while (insurance.upper() != 'Y') and (insurance.upper() != 'N'):
+                # Accounts for edge case that player bet all their money and don't have any left for the insurance bet
+                if player.getMoney() - player.getWager() == 0:
+                    print(f'Sorry, {player.getName()}! You don\'t have anymore money left to make an insurance bet :(')
+                else:
                     insurance = input(f'{player.getName()}, care to make an insurance bet? (Y/N) ')
+                    while (insurance.upper() != 'Y') and (insurance.upper() != 'N'):
+                        insurance = input(f'{player.getName()}, care to make an insurance bet? (Y/N) ')
 
-                if insurance.upper() == 'Y':
-                    insurance_wager_is_int = False
-                    print()
+                    if insurance.upper() == 'Y':
+                        print()
+                        player.setInsuranceWager(self._determineInsuranceWager(player))
 
-                    # Accounting for user error of inputting anything other than an int for the wager.
-                    while not insurance_wager_is_int:
-                        try:
-                            insurance_wager = int(input(f'Please make an insurance wager from $1 to ${player.getWager()//2} '))
-                            while (insurance_wager < 1) or (insurance_wager > player.getWager()//2) or (player.getMoney() - insurance_wager < 0):
-                                if insurance_wager < 1:
-                                    print('Sorry, you can\'t wager anything less than $1.')
-                                elif insurance_wager > player.getWager()//2:
-                                    print(f'Sorry, you can\'t wager anything more than ${player.getWager()//2}.')
-                                else:
-                                    print('You don\'t have enough money to make that bet!')
-                                print()
-                                insurance_wager = int(input(f'Please make an insurance wager from $1 to ${player.getWager() // 2} '))
-                            insurance_wager_is_int = True
-
-                        except ValueError:
-                            print('Insurance wager must be an int.')
-                            print()
-                    player.setInsuranceWager(insurance_wager)
                 print()
 
         for player in self.players:
@@ -274,6 +294,7 @@ class Game:
                 print(f'Your hand: {player_hand} === {hand_score} points')
                 print()
 
+                # If player busts, their turn is over
                 if hand_score > 21:
                     print(f'Sorry, {player.getName()}, your hand is a bust!')
                     player.setTurn(False)
