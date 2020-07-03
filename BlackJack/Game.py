@@ -232,8 +232,7 @@ class Game:
             print(f'{player.getName()}\'s hand: {player.getHand()} === {self.SCORING.totalScore(player.getHand())} points')
             breakpoint = input('')
 
-        # self.CARDS.getCard()
-        self.DEALER.addCard('A of spades')
+        self.DEALER.addCard(self.CARDS.getCard())
         dealer_hand = self.DEALER.getHand()
         print(f'Dealer\'s hand: {dealer_hand} === {self.SCORING.totalScore(dealer_hand)} points')
         breakpoint = input('')
