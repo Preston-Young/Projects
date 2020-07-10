@@ -5,8 +5,6 @@ import urllib.request
 
 BASE_URL = 'https://www.googleapis.com/youtube/v3'
 
-GOOGLE_API_KEY = ''
-
 def build_search_url(symbol, trading_days, documentation) -> str:
     '''
     Builds the search url based on the given stock symbol and trading days.
