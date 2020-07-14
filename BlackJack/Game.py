@@ -5,7 +5,7 @@ from Scoring import Scoring
 
 class Game:
 
-    # Constants for min bet, max bet, payout, and when to shuffle
+    # Constants for min bet, max bet, payout as a string, payout as a float, and when to shuffle
     MINBET = 20
     MAXBET = 500
     BLACKJACKPAYOUTSTR = '3:2'
@@ -21,9 +21,12 @@ class Game:
         self.roundOver = True
         self.winnings = []
 
-    # Private helper function that keeps prompting the player for a wager until they provide a valid input
-    # The wager input must be: an int, within the min/max bet range, no more than the amount of money they have left
     def _determineWager(self, player: Player) -> int:
+        """
+        Private helper function that keeps prompting the player for a wager until they provide a valid input
+        The wager input must be: an int, within the min/max bet range, no more than the amount of money they 
+        have left
+        """
         player_money = player.getMoney()
         wager_is_int = False
 
@@ -58,10 +61,12 @@ class Game:
 
         return wager
 
-    # Private helper function that keeps prompting the player for an insurance wager until they provide a valid input
-    # The insurance wager input must be: an int, at least $1 and no more than half their original wager, and it
-    # cannot be more than the amount of money the player has left (after their wage is deducted)
     def _determineInsuranceWager(self, player: Player) -> int:
+        """
+        Private helper function that keeps prompting the player for an insurance wager until they provide a valid input
+        The insurance wager input must be: an int, at least $1 and no more than half their original wager, and it
+        cannot be more than the amount of money the player has left (after their wage is deducted)
+        """
         insurance_wager_is_int = False
         print(f'Total money left (after your wager of ${player.getWager()}): ${player.getMoney()-player.getWager()}')
         breakpoint = input('')
@@ -87,8 +92,10 @@ class Game:
 
         return insurance_wager
 
-    # Add a player to the game, but only after the round is over
     def addPlayer(self, player: Player) -> None:
+        """
+        Add a player to the game, but only after the round is over
+        """
         if self.roundOver:
             self.players.append(player)
 
@@ -118,43 +125,44 @@ class Game:
         breakpoint = input('')
 
         for player in self.players:
-            wager = player.getWager()
-            insurance_wager = player.getInsuranceWager()
-            player_hand = player.getHand()
-            player_score = player.getTotalScore()
+            for hand_num in range(1, player.getNumHands()+1):
+                wager = player.getWager(hand_num)
+                insurance_wager = player.getInsuranceWager()
+                player_hand = player.getHand(hand_num)
+                player_score = player.getTotalScore(hand_num)
 
-            # If dealer gets a BlackJack, the player loses their wager unless they also have a BlackJack.
-            # Also, they win twice their insurance wager if they chose to make one at the beginning of the round.
-            if dealer_score == 21 and self.DEALER.handSize() == 2:
-                if player_score == 21 and player.handSize() == 2:
-                    winning = 0 + (insurance_wager * 2)
+                # If dealer gets a BlackJack, the player loses their wager unless they also have a BlackJack.
+                # Also, they win twice their insurance wager if they chose to make one at the beginning of the round.
+                if dealer_score == 21 and self.DEALER.handSize() == 2:
+                    if player_score == 21 and player.handSize(hand_num) == 2:
+                        winning = 0 + (insurance_wager * 2)
+                    else:
+                        winning = (wager * -1) + (insurance_wager * 2)
+
+                # Payout for a BlackJack is based on the preset amount
+                elif player_score == 21 and player.handSize(hand_num) == 2:
+                    winning = int(wager * self.BLACKJACKPAYOUT) + (insurance_wager * -1)
+
+                # If player busts, they lose their wager regardless of what hand the dealer has (even if dealer busts)
+                elif player_score > 21:
+                    winning = (wager * -1) + (insurance_wager * -1)
+
+                # If the dealer busts or the player has a higher score than the dealer, they win their wager back
+                elif dealer_score > 21 or player_score > dealer_score:
+                    winning = wager + (insurance_wager * -1)
+
+                # If neither the player nor dealer busts, but the player has a lower score than the dealer,
+                # the player loses their wager.
+                elif player_score < dealer_score:
+                    winning = (wager * -1) + (insurance_wager * -1)
+
+                # The last case is where the player has the same score as the dealer.
                 else:
-                    winning = (wager * -1) + (insurance_wager * 2)
+                    winning = 0 + (insurance_wager * -1)
 
-            # Payout for a BlackJack is based on the preset amount
-            elif player_score == 21 and player.handSize() == 2:
-                winning = int(wager * self.BLACKJACKPAYOUT) + (insurance_wager * -1)
-
-            # If player busts, they lose their wager regardless of what hand the dealer has (even if the dealer busts)
-            elif player_score > 21:
-                winning = (wager * -1) + (insurance_wager * -1)
-
-            # If the dealer busts or the player has a higher score than the dealer, they win their wager back
-            elif dealer_score > 21 or player_score > dealer_score:
-                winning = wager + (insurance_wager * -1)
-
-            # If neither the player nor dealer busts, but the player has a lower score than the dealer,
-            # the player loses their wager.
-            elif player_score < dealer_score:
-                winning = (wager * -1) + (insurance_wager * -1)
-
-            # The last case is where the player has the same score as the dealer.
-            else:
-                winning = 0 + (insurance_wager * -1)
-
-            print(f'{player.getName()}\'s hand: {player_hand} === {player_score} points | Winnings: {winning}')
-            self.winnings.append((player, winning))
-            breakpoint = input('')
+                print(f'<{player.getName()}> Hand #{hand_num}: {player_hand} === {player_score} points | Winnings: {winning}')
+                self.winnings.append((player, winning))
+                breakpoint = input('')
         self.distributeWinnings()
 
     # Distributes all the winnings (or losings) back to the players and
@@ -184,7 +192,7 @@ class Game:
         print(f'The current number of cards left in the deck is {self.CARDS.deckSize()}')
         print(f'The deck will be reshuffled after {self.CARDS.deckSize() - self.WHENTOSHUFFLE} more cards are drawn')
 
-        # For each player, print their name and toal money, and then ask them to make a wager
+        # For each player, print their name and total money, and then ask them to make a wager
         for player in self.players:
             print()
             print(f'Player: {player.getName()}')
@@ -227,46 +235,108 @@ class Game:
     # card is dealt to everyone before the second card is dealt.
     # I added 'breakpoint' variables for now to simulate dealing one card at a time.
     def dealInitialCards(self) -> None:
-        for player in self.players:
-            player.addCard(self.CARDS.getCard())
-            print(f'{player.getName()}\'s hand: {player.getHand()} === {self.SCORING.totalScore(player.getHand())} points')
-            breakpoint = input('')
-
-        self.DEALER.addCard(self.CARDS.getCard())
-        dealer_hand = self.DEALER.getHand()
-        print(f'Dealer\'s hand: {dealer_hand} === {self.SCORING.totalScore(dealer_hand)} points')
-        breakpoint = input('')
+        self._dealPlayerInitialCards()
+        self._dealDealerInitialCards()
 
         # All players have the option of making an insurance bet only if the dealer's first card is an Ace.
-        if dealer_hand[0][0] == 'A':
-            for player in self.players:
-                # Accounts for edge case that player bet all their money and don't have any left for the insurance bet
-                if player.getMoney() - player.getWager() == 0:
-                    print(f'Sorry, {player.getName()}! You don\'t have anymore money left to make an insurance bet :(')
-                else:
-                    insurance = input(f'{player.getName()}, care to make an insurance bet? (Y/N) ')
-                    while (insurance.upper() != 'Y') and (insurance.upper() != 'N'):
-                        insurance = input(f'{player.getName()}, care to make an insurance bet? (Y/N) ')
+        if self.DEALER.getHand()[0][0] == 'A':
+            self._insuranceBetting()
 
-                    if insurance.upper() == 'Y':
-                        print()
-                        player.setInsuranceWager(self._determineInsuranceWager(player))
-
-                print()
-
-        for player in self.players:
-            player_card = self.CARDS.getCard()
-            player.addCard(player_card)
-            print(f'{player.getName()}\'s hand: {player.getHand()} === {self.SCORING.totalScore(player.getHand())} points')
-            breakpoint = input('')
-
-        dealer_card = self.CARDS.getCard()
-        self.DEALER.addCard(dealer_card)
-        dealer_hand = [self.DEALER.getHand()[0], '?']
-        print(f'Dealer\'s hand: {dealer_hand} <= {self.SCORING.totalScore( [dealer_hand[0]] )} points')
-        breakpoint = input('')
+        self._dealPlayerInitialCards()
+        self._dealDealerInitialCards()
 
         self.dealPlayerCards()
+
+    # Helper function that deals one of the two initial cards to the player at the start of the round.
+    def _dealPlayerInitialCards(self) -> None:
+        for player in self.players:
+            still_dealing = True
+            while still_dealing:
+                num_hands = player.getNumHands()
+                for hand_num in range(1, num_hands+1):
+
+                    # This is so we can skip the hands that already have two cards and only look at the rest that split.
+                    if player.handSize(hand_num) != 2:
+                        player.addCard(self.CARDS.getCard(), hand_num)
+                        player_hand = player.getHand(hand_num)
+                        player_score = self.SCORING.totalScore(player_hand)
+                        print(f'<{player.getName()}> Hand #{hand_num}: {player_hand} === {player_score} points')
+
+                        # Check to see if player wants to double down or split, but only if they have enough money to do so.
+                        # Note, player cannot double down on a BlackJack.
+                        if (player.handSize(hand_num) == 2) and (player.getWager(hand_num) + player.totalWager() <= player.getMoney()) and (player_score != 21):
+                            print()
+                            is_doubling_down = input('Want to double down? (Y/N) ')
+                            while (is_doubling_down.upper() != 'Y') and (is_doubling_down.upper() != 'N'):
+                                is_doubling_down = input('Want to double down? (Y/N) ')
+                            print()
+
+                            if is_doubling_down.upper() == 'Y':
+                                player.doubleDown(hand_num)
+                                print('Doubling down...')
+                                breakpoint = input('')
+
+                            # If player's two cards are identical, give them the choice to split.
+                            # Note that the player cannot split to make more than 4 hands.
+                            elif player_hand[0][0] == player_hand[1][0] and player.getNumHands() < 4:
+                                is_splitting = input('Want to split? (Y/N) ')
+                                while (is_splitting.upper() != 'Y') and (is_splitting.upper() != 'N'):
+                                    is_splitting = input('Want to split? (Y/N) ')
+                                print()
+
+                                if is_splitting.upper() == 'Y':
+                                    player.split(hand_num)
+                                    print('Splitting hand...')
+                                    breakpoint = input('')
+
+                            if hand_num == player.getNumHands():
+                                still_dealing = False
+
+                        # Only stop dealing if we've successfully dealt two cards to all the hands.
+                        elif hand_num == player.getNumHands():
+                            still_dealing = False
+                            breakpoint = input('')
+
+                        # This is solely for printing purposes in the edge case that the user cannot split or double
+                        # down due to lack of funds, and still has cards left to be dealt to their other hands.
+                        elif player.handSize(hand_num) == 2:
+                            breakpoint = input('')
+
+                        player.setTotalScore(player_score, hand_num)
+
+    # Helper function that deals one of the two initial cards to the dealer at the start of the round.
+    def _dealDealerInitialCards(self) -> None:
+        self.DEALER.addCard(self.CARDS.getCard())
+
+        # Want to show only dealer's first card face up.
+        if self.DEALER.handSize() == 1:
+            dealer_hand = self.DEALER.getHand()
+            dealer_score = self.SCORING.totalScore(dealer_hand)
+            print(f'Dealer\'s hand: {dealer_hand} === {dealer_score} points')
+        else:
+            dealer_hand = [self.DEALER.getHand()[0], '?']
+            dealer_score = self.SCORING.totalScore( [dealer_hand[0]] )
+            print(f'Dealer\'s hand: {dealer_hand} <= {dealer_score} points')
+
+        self.DEALER.setTotalScore(dealer_score)
+        breakpoint = input('')
+
+    # Helper function that asks players if they want to make an insurance bet.
+    def _insuranceBetting(self) -> None:
+        for player in self.players:
+            # Accounts for edge case that player bet all their money and don't have any left for the insurance bet
+            if player.getMoney() - player.getWager() == 0:
+                print(f'Sorry, {player.getName()}! You don\'t have anymore money left to make an insurance bet :(')
+            else:
+                insurance = input(f'{player.getName()}, care to make an insurance bet? (Y/N) ')
+                while (insurance.upper() != 'Y') and (insurance.upper() != 'N'):
+                    insurance = input(f'{player.getName()}, care to make an insurance bet? (Y/N) ')
+
+                if insurance.upper() == 'Y':
+                    print()
+                    player.setInsuranceWager(self._determineInsuranceWager(player))
+
+            print()
 
     # Deals the rest of the cards to the players (depending on whether they choose
     # to hit or stand) and then to the dealer
@@ -275,44 +345,66 @@ class Game:
             print(f'~~~~~~~~~~~~~~~~{player.getName()}\'s Turn~~~~~~~~~~~~~~~~')
             print()
 
-            player_hand = player.getHand()
-            hand_score = self.SCORING.totalScore(player_hand)
-
-            # Check to see if the player has a BlackJack. Otherwise, proceed with their turn.
-            if hand_score == 21:
-                print(f'Your hand: {player_hand} === {hand_score} points')
-                print()
-                print(f'Congrats, {player.getName()}! You got a BlackJack!')
-                breakpoint = input('')
-            else:
-                player.setTurn(True)
-
-            while player.isTurn():
-                player_hand = player.getHand()
+            for hand_num in range(1, player.getNumHands()+1):
+                player_hand = player.getHand(hand_num)
                 hand_score = self.SCORING.totalScore(player_hand)
-                print(f'Your hand: {player_hand} === {hand_score} points')
-                print()
 
-                # If player busts, their turn is over
-                if hand_score > 21:
-                    print(f'Sorry, {player.getName()}, your hand is a bust!')
-                    player.setTurn(False)
+                # Check to see if the player has a BlackJack. Otherwise, proceed with their turn.
+                if hand_score == 21:
+                    print(f'Hand #{hand_num}: {player_hand} === {hand_score} points')
+                    print()
+                    print(f'Congrats, {player.getName()}! You got a BlackJack!')
                     breakpoint = input('')
 
-                else:
-                    hit_or_stand = input('Would you like to hit or stand? ')
+                elif player.hasDoubledDown(hand_num):
+                    player.addCard(self.CARDS.getCard(), hand_num)
+                    player_hand = player.getHand(hand_num)
+                    hand_score = self.SCORING.totalScore(player_hand)
 
-                    while (hit_or_stand.lower() != 'hit') and (hit_or_stand.lower() != 'stand'):
-                        print('Must choose hit or stand.')
-                        print()
+                    print('Since you doubled down on this hand, you only get one more card.')
+                    breakpoint = input('')
+                    print(f'Hand #{hand_num}: {player_hand} === {hand_score} points')
+                    breakpoint = input('')
+
+                    if hand_score > 21:
+                        print(f'Sorry, {player.getName()}, this hand a bust!')
+                        breakpoint = input('')
+
+                else:
+                    player.setTurn(True)
+
+                while player.isTurn():
+                    player_hand = player.getHand(hand_num)
+                    hand_score = self.SCORING.totalScore(player_hand)
+                    print(f'Hand #{hand_num}: {player_hand} === {hand_score} points')
+                    print()
+
+                    # If player busts, their turn is over.
+                    if hand_score > 21:
+                        print(f'Sorry, {player.getName()}, this hand is a bust!')
+                        player.setTurn(False)
+                        breakpoint = input('')
+
+                    # Player cannot hit anymore when their hand gets to a score of 21.
+                    elif hand_score == 21:
+                        print(f'This hand is equal to 21, so you can\'t hit anymore')
+                        player.setTurn(False)
+                        breakpoint = input('')
+
+                    else:
                         hit_or_stand = input('Would you like to hit or stand? ')
 
-                    if hit_or_stand.lower() == 'hit':
-                        player.addCard(self.CARDS.getCard())
-                    else:
-                        player.setTurn(False)
-                    print()
-            player.setTotalScore(hand_score)
+                        while (hit_or_stand.lower() != 'hit') and (hit_or_stand.lower() != 'stand'):
+                            print('Must choose hit or stand.')
+                            print()
+                            hit_or_stand = input('Would you like to hit or stand? ')
+
+                        if hit_or_stand.lower() == 'hit':
+                            player.addCard(self.CARDS.getCard(), hand_num)
+                        else:
+                            player.setTurn(False)
+                        print()
+                player.setTotalScore(hand_score, hand_num)
         self.dealDealerCards()
 
     # Dealer has their own set of rules for hitting and standing. Their decisions
