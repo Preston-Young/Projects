@@ -23,6 +23,9 @@ even give him a bit of credit for the code he wrote himself.
   * Undo (Ctrl + Z)
   * Redo (Ctrl + Y)
   * Quit (Ctrl + Q)
+  
+## What I would implement in the future:
+I would like to take on the challenge of implementing, cut, copy, and paste. These commands would be challenging on their own to implement, but I would also have to consider how to implement them with redo and undo working properly.
 
 ### Note:
 The tarball file that I included in the text editor folder contains the same 
