@@ -7,10 +7,11 @@ Even though this was the smallest project I've built, I spent a lot of time lear
 ### What I want to implement in the future
 In the future, I want to use my new familiarity with the Twitter API and integrate Google's Natural Language API. My idea is to look at all of the tweets under the top trending hashtags. By using machine learning and Google's Natural Language API, I plan to parse through all the tweets under each hashtag in order to generate the overall emotion for each one to display for the users.
 
-### Here's a sample interaction of my bot running on pythonanywhere.com's cloud console
+## Here's a sample interaction of my bot running on pythonanywhere.com's cloud console
+![Terminal Interaction](https://user-images.githubusercontent.com/56369636/87867725-d19e6800-c944-11ea-81cf-9257e134d089.JPG)
 
+## Here's what an automated reply from my bot would look like
+![Sample Tweet Reply](https://user-images.githubusercontent.com/56369636/87867730-e11db100-c944-11ea-8b55-a63719afee7d.JPG)
 
-### Here's what an automated reply from my bot would look like
-
-
-### Here are a few tweets where I mention my user, but notice that only the tweet containing the hashtag #HelloWorld received a reply from my bot
+## Here are a few tweets where I mention my user, but notice that only the tweet containing the hashtag #HelloWorld received a reply from my bot
+![Sample Tweets](https://user-images.githubusercontent.com/56369636/87867734-ebd84600-c944-11ea-80d1-49be6268e225.JPG)
